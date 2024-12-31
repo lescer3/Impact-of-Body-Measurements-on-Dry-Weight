@@ -1,0 +1,98 @@
+---
+title: Identifying the Impact of Body Measurements on Dry Weight Across and Within
+  Bee Species
+author:
+          - Leslie Cervantes Rivera^[Cheadle Center for Biodiversity and Ecological Restoration, UCSB, UCSB-Smithsonian Scholars Program]
+          - Rachel Radwich^[Cheadle Center for Biodiversity and Ecological Restoration, UCSB, UCSB-Smithsonian Scholars Program]
+          - Madeleine M. Ostwald^[Cheadle Center for Biodiversity and Ecological Restoration, UCSB]
+          - Katja C. Seltmann^[Cheadle Center for Biodiversity and Ecological Restoration, UCSB]
+date: ''
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# \Large $\text{\underline{Abstract}}$
+Bee body size affects their ability to forage, carry pollen, and adapt to environmental conditions. Body size is influenced by environmental factors such as food availability and temperature. As these conditions continue to change, it is crucial to accurately measure body size and determine whether particular body measurements can predict size variation across and within species. Measuring body size is challenging as bees are often small and may be missing body parts. In this study, we examined ten different bee species across three different families. We compared body and wing measurements as proxies for dry weight for both damaged and non-damaged bees. We used fitted vs. residuals and QQ plots to test for normality and linearity, along with performing simple linear regression using R version 4.4.0. We determined that intertegular distance (ITD) and head width to be the most significant predictors of dry weight across species and within most species, suggesting that these measurements may be used to accurately estimate dry weight. We also found that intertegular distance significantly predicted dry mass even in specimens missing body parts, suggesting that this measurement is somewhat robust to specimen damage. These findings contribute to the understanding of the relationship between dry weight and body measurements and provide guidelines for accurately estimating body size within and across species, for a range of applications in ecological research and conservation efforts.
+
+# \Large $\text{\underline{Background}}$
+Bee body size affects their foraging behaviors, carry pollen, and adapt to environmental conditions. Body size is influenced by environmental factors such as food availability and temperature. As global temperature continues to increase, body size tends to shrink, influencing foraging behavior by decreasing foraging range [1] and affects the flowering community which affects bees with a narrower diet [2]. It is crucial to accurately measure body size and determine whether particular body measurements can predict size variation across and within species. Because we are using a museum’s collection, as many researchers do for ecological and evolutionary studies, the process of measuring body size is challenging as bees are often small and may be missing body parts. 
+
+![Damaged Specimen](~/Desktop/Bees/Damaged.png){width=25%}
+
+![Undamaged Specimen](~/Desktop/Bees/Undamaged.png){width=25%}
+
+![Missing body parts in specimens' boxes](~/Desktop/Bees/Body Parts.png){width=35%}
+
+# \Large $\text{\underline{Materials and Methods}}$
+In this study, we examined ten different bee species across three different families from the UCSB Invertebrate Zoology Collection. We compared body and wing measurements as proxies for dry weight for both damaged and non-damaged bees. We removed the labels from all the dry specimens and weighed them (Fig. 2). The true weight of the bee was then obtained by deducting the average pin weight from the overall weight. All specimens’ head width was measured by measuring the widest part of the head using a microscope. We measured intertegular distance, wing length, costal vein, marginal cell, radial cell, and wing width using ImageJ version v1.54g. To understand the relationships between dry weight and the measurements, we used fitted vs. residuals and QQ plots to test for normality and linearity, along with performing simple linear regression using R version 4.4.0. In order to perform significance tests within species, we only conducted on a sample size of females greater than 10 (n > 10). 
+
+![Measuring dry weight of bee without labels](~/Desktop/Bees/Dry Weight.png){width=25%}
+
+![Measuring head width](~/Desktop/Bees/Head Width.png){width=25%}
+
+![Measuring intertegular distance](~/Desktop/Bees/Intertegular Distance.png){width=25%}
+
+![a. Wing length measurement b. Costal vein measurement c. Marginal cell measurement d. Radial cell measurement e. Wing width measurement](~/Desktop/Bees/Wing Measurements.png){width=45%}
+
+# \Large $\text{\underline{Data Analysis and Visuals}}$
+
+A linear regression analysis was conducted to examine the relationship between body measurements and dry weight in both damage and no damage groups. Scatter plots were generated to visualize the relationships, and significance tests were performed to determine the strength of the relationship. 
+
+```{r}
+#Intertegular Distance
+library(ggplot2)
+complete_bee_info <- read.csv("~/Desktop/Bees/complete_bee_info.csv")
+ggplot(complete_bee_info, aes(x = log_ITD_mm, y = log_BeeWeight_g)) + 
+  geom_point(aes(color = Species, shape = Sex)) + geom_smooth(method = "lm", aes(color = Species)) + 
+  geom_smooth(method = "lm", aes(group = 1), color = "black", linetype = "dashed") +
+  labs(title = "Intertegular Distance vs Dry Weight", x = "Log Intertegular Distance (mm)",
+       y = "Log Dry Mass (g)")  + theme_minimal() + 
+  facet_wrap(~ Damage, labeller = as_labeller(c('N' = 'No Damage', 'Y' = 'Damage'))) + 
+  scale_color_viridis_d(option = "turbo")
+```
+
+                                Figure A
+
+Comparison of Species Across Damage & No Damage Groups: Figure A illustrates the relationship between log intertegular distance (x-axis) and log dry mass (y-axis) for undamaged species, with each point color-coded for species. The graph on the right mirrors the same relationship for damaged species. The lines within each color represent the within-species relationships. 
+
+```{r}
+#Head Width
+ggplot(complete_bee_info, aes(x = log_HeadWidth_mm, y = log_BeeWeight_g)) + 
+  geom_point(aes(color = Species, shape = Sex)) + geom_smooth(method = "lm", aes(color = Species)) + 
+  geom_smooth(method = "lm", aes(group = 1), color = "black", linetype = "dashed") +
+  labs(title = "Head Width vs Dry Weight by Species", x = "Log Head Width (mm)",
+       y = "Log Dry Mass (g)")  + theme_minimal() + 
+  facet_wrap(~ Damage, labeller = as_labeller(c('N' = 'No Damage', 'Y' = 'Damage'))) + 
+  scale_color_viridis_d(option = "turbo")
+```
+
+                                  Figure B
+
+Comparison of Species Across Damage & No Damage Groups: Figure B illustrates the relationship between log head width (x-axis) and log dry mass (y-axis) for undamaged species, with each point color-coded for species. The graph on the right mirrors the same relationship for damaged species. The lines within each color represent the within-species relationships. 
+
+# \Large $\text{\underline{Results}}$
+![Summary of p-values, Adjusted $R^2$, & $R^2$ within species](~/Desktop/Bees/Table.png){width=100%}
+
+Figure 8 illustrates the p-values, adjusted $R^2$, and $R^2$ for each measurement within species. Species are represented by their abbreviated names: Xyl. vir (*Xylocopa virginica*), Bom. imp. (*Bombus impatiens*), Pti. bom. (*Ptilothrix bombiformis*), Hal. lig. (*Halictus ligatus*), Las. hit. (*Lasioglossum hitchensi*), Las. tri. (*Lasioglossum trigeminum*), Las. pru. (*Lasioglossum pruinosum*), Las. bruh. (*Lasioglossum bruneri*). The cells highlighted in green indicate statistically significant results (p < .05).
+
+![Summary of p-values, Adjusted $R^2$, & $R^2$ across species](~/Desktop/Bees/Table 2.png){width=50%}
+
+Figure 9 illustrates the p-values, adjusted $R^2$, and $R^2$ for each measurement across species. The cells highlighted in green indicate statistically significant results (p < .05). 
+
+
+The regression analysis for Intertegular Distance vs Dry Weight (Figure A) revealed the significant p-value for both the damage and no damage groups (p < 2.2E-16). The adjusted $R^2$ values were 0.7840 for the no damage group and 0.8379 for the damage group. 
+Additionally, the regression analysis for Head Width vs Dry Weight (Figure B) revealed the significant p-value for both the damage and no damage groups (p < 2.2E-16). The adjusted $R^2$ values were 0.8052 for the no damage group and 0.7997 for the damage group.
+
+The similar adjusted $R^2$ values suggest that the relationship between intertegular distance vs dry weight and head width vs dry weight are consistent across both groups. This indicates that the presence of damage does not significantly impact the predictive power. This implies the damaged specimens can be reliably used in the analysis without introducing substantial bias. 
+
+# \Large $\text{\underline{Conclusion}}$
+We determined that intertegular distance (ITD) and head width (HW) to be the most significant predictors of dry weight across species and within most species, suggesting that these measurements may be used to accurately estimate dry weight. We also found that intertegular distance significantly predicted dry mass even in specimens missing body parts, suggesting that this measurement is somewhat robust to specimen damage. Furthermore, we observed that across species, body size, marginal cell/costal cell, and radial cell/costal cell are similarly significant. Within species, we observed ITD, and HW to be significant within half the species. Ptilothrix bombiformis is significant in half of the measurements, Bombus impatiens and Lasioglossum bruneri are significant in body size, and Lasioglossum pruinosum is significant in width/length. Overall, this research helps us better understand which body measurements can predict size variation in across and within species and for future projects focused on identifying which bee species may be more vulnerable to environmental changes based on their body parts and size.
+
+# \Large $\text{\underline{References}}$
+[1] Gérard M, Guiraud M, Cariou B, Henrion M, Baird E. Elevated developmental temperatures impact the size and allometry of morphological traits of the bumblebee Bombus terrestris. J Exp Biol. 2023 Apr 15;226(8):jeb245728. doi: 10.1242/jeb.245728. Epub 2023 Apr 19. PMID: 36995273; PMCID: PMC10263145.
+[2] Pardee Gabriella L., Griffin Sean R., Stemkovski Michael, Harrison Tina, Portman Zachary M., Kazenel Melanie R., Lynn Joshua S., Inouye David W. and Irwin Rebecca E.2022 Life-history traits predict responses of wild bees to climate variationProc. R. Soc. B.28920212697. http://doi.org/10.1098/rspb.2021.2697 

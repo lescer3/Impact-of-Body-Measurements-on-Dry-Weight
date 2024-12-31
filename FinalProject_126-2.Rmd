@@ -1,0 +1,154 @@
+---
+title: "Diamond Prices 2022"
+author: "Leslie Cervantes Rivera & Valerie De La Fuente"
+date: "2024-06-11"
+output: 
+  pdf_document: 
+    number_sections: false
+    latex_engine: xelatex
+    extra_dependencies: ["amsmath", "tabularx"]
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# \Large $\text{\underline{Introduction}}$ 
+Diamonds have traditionally been associated with luxury, romance, and wealth. Due to their allure, they are in great demand in the jewelry market and investment assets. However, the process to determining their price is based on several factors such as carat, cut, color, clarity, and etc. This report aims to examine the relationship between the explanatory variables (cut, color, length, and width of a diamond) and its effect on the diamond price. 
+
+# \Large $\text{\underline{Part 1}}$
+This report utilizes a dataset obtained from Kaggle, which includes 53,943 observations across 11 variables related to diamond prices in 2022. From this big data set, a random sample of 300 observations was selected, focusing on 5 variables. Each observation (row) corresponds to a randomly selected diamond, providing insight to its many attributes. 
+
+```{r}
+#diamondprices <- read.csv("~/Desktop/Diamonds Prices2022.csv")
+#diamond_samples <- diamondprices[sample(nrow(diamondprices), 300),]
+diamond_samples <- read.csv("~/Desktop/diamond_samples.csv")
+```
+The examination revolves around two categorical independent variables: "Cut" and "Color." The "Cut" variable includes 5 input values: Fair, Good, Ideal, Premium, and Very Good, while "Color" includes 7 input values: Color D, Color E, Color F, Color G, Color H, Color I, and Color J.
+
+Additionally, the examination incorporates two quantitative independent variables: "x" (renamed to "x1"), representing the length of the diamond in millimeters (mm), and "y" (renamed to "x2"), signifying the width of the diamond in millimeters. Together, these factors help to contribute to understanding the physical characteristics of the diamonds under examination. 
+
+Other variables that are not included in the examination are "Carat", "Clarity", "Depth", and "Table." "Carat" is used to describe the weight of diamonds. "Clarity" includes SI1, VS2, and others which describes the presence of internal and external imperfections. "Depth" represents the height of the diamond in millimeters (mm). "Table" describes the largest flat facet on the top of the diamond. 
+
+Finally, the report's main focus is on the one quantitative dependent variable, the price, which serves as the response variable in this analysis. We examine the interplay between these variables to explain how they affect the price of diamonds.
+
+```{r}
+diamonds <- diamond_samples[c("color", "cut", "x", "y", "price")]
+colnames(diamonds) <- c("color", "cut", "x1", "x2", "y")
+x1vy <- subset(diamonds, select = c(x1, y))
+plot(x1vy)
+```
+
+There is not a correlation between length (x1) and price (y).
+```{r}
+x2vy <- subset(diamonds, select = c(x2, y))
+plot(x2vy)
+```
+
+There is not a correlation between width (x2) and price (y).
+```{r} 
+mlr_summary <- lm(y~., diamonds)
+summary(mlr_summary)
+```
+
+It is interesting to see there are 3 significant variables in the summary table.
+
+# \Large $\text{\underline{Part 2}}$
+For our simple linear regression model, we have chosen x1 (diamond length in mm) to be our chosen predictor. 
+
+```{r}
+length <- lm(y~x1, diamonds)
+summary(length)
+```
+$$\begin{aligned}
+&H_0: \beta_1 = 0 \\
+&H_1: \beta_1 \neq 0
+\end{aligned}$$
+Our alpha is 0.05 and the p-value is less than 2e-16. We reject the null hypothesis since 2e-16 < 0.05.
+$$\begin{aligned}
+&H_0: \beta_0 = 0 \\
+&H_1: \beta_0 < 0
+\end{aligned}
+$$
+Our alpha is the same and our p-value is (2e-16)/2 = 1e-16. We reject the null hypothesis since 1e-16 < 0.05.
+
+Therefore, the intercept and x1 are significant to the simple linear regression model. This tells us diamond length in mm is significant to the price value and should be included in the multiple linear regression model. 
+
+Our adjusted R-squared is at 79.81% which indicates the model is a good fit. 
+```{r}
+
+predict(length, newdata = data.frame(x1=7), 
+         level = .95,
+         interval = "confidence")
+predict(length, newdata = data.frame(x1=7), 
+         level = .95,
+         interval = "prediction")
+```
+We are 95% confident that the true mean value of price lies within $7,745.13 and $8,367.96. This interval is wide which indicates the sample does not provide a precise representation of the population mean.
+
+We are 95% confident that a new observation of price lies within $4,535.14 and $11,577.94. This interval is wider than the confidence interval because it accounts for uncertainty in estimating the mean and the variability of individual observations.
+```{r}
+plot(length)
+```
+
+Using x1 as our predictor, the residuals versus fitted plot indicates a non-linear relationship. For the QQ plot, some of the observations are way off the line, thus the normality assumption might be violated. In the scale-location plot, the points are not randomly spread around the line and widens as the fitted values increase. This means the variability of the residuals and variance are not constant.   
+
+```{r}
+log_y <- log(diamonds$y) 
+length_log <- lm(log_y~x1, diamonds)
+plot(length_log)
+```
+
+After we transformed our response variable y by taking the log of it, we can see our plots are more linear in the residuals verses fitted plot. Additionally, there are more observations on the line in the QQ plot and on scale-location, the points are more constant for the variability of the residuals and variance. 
+```{r}
+summary(length_log)
+```
+
+Looking at the summary of the transformed model, we noticed an increase in adjusted R-squared which indicates this model is a better fit than the original simple linear regression model. 
+
+# \Large $\text{\underline{Conclusion}}$
+We have demonstrated that x1 (length in mm) is significant to y (price value of diamonds) and therefore should be kept in our simple linear regression model. In the background, we have added predictors to our simple linear regression model and examined adjusted R-squared to determine if they should be kept in our multiple linear regression model. We have concluded that x1 (length in mm), x2 (width in mm), Color, and Cut are significant and should not be dropped based on adjusted R-squared. 
+
+```{r}
+updatedmodel <- lm(y~ x1 + x2 + color + cut, diamonds)
+library(car)
+vif(updatedmodel)
+```
+
+The results of the vif function indicate there is multicollinearity between x1 and x2. 
+
+# \Large $\text{\underline{Part 3}}$
+```{r}
+start_model <- lm(y~1, diamonds)
+mlr <- lm(y~., diamonds)
+step(start_model, direction="forward", scope=formula(mlr))
+```
+Despite using the adjusted R-squared comparison method to see which predictors are best to use, we used forward selection as a more robust way to check which predictors work best for the multiple linear regression model. Forward selection tells us that x2 (width in mm), Color, and Cut are significant and should remain in our best model. It is logical that we dropped x1 (length in mm) from our multiple linear regression model because there was multicollinearity present between x1 and x2.
+
+```{r}
+bestmodel <- lm(y~ x2 + color + cut, diamonds)
+summary(bestmodel)
+
+```
+From the summary, we can see that adjusted R-squared is high which indicates the predictors are a good fit for the model. However, we can see that the only significant colors are Color I and J, and the only significant cut is Cut Ideal. This leads us to conclude that our final best model includes x2, Color I and J, and Cut Ideal as our predictors. 
+
+```{r}
+diamonds_bestfinal <- subset(diamonds, !(color %in% c("E", "F", "G", "H")))
+diamonds_bestfinal <- subset(diamonds, !(cut %in% c("Good", "Premium", "Very Good")))
+bestfinal <- lm(y~ x2 + color, diamonds_bestfinal)
+
+predict(bestfinal, newdata = data.frame( x2 = 8, color = "I"), 
+         level = .95,
+         interval = "confidence")
+predict(bestfinal, newdata = data.frame(x2 = 8, color = "I"), 
+         level = .95,
+         interval = "prediction")
+```
+
+We are 95% confident that the true mean value of price lies within $10,161.14 and $12,571.36. This interval is wide which indicates the sample does not provide a precise representation of the population mean.
+
+We are 95% confident that a new observation of price lies within $7,853.98 and $14,878.51. This interval is wider than the confidence interval because it accounts for uncertainty in estimating the mean and the variability of individual observations.
+
+# \Large $\text{\underline{Conclusion}}$
+
+We have concluded that x2 (width in mm), Color I and J, and Cut Ideal have the largest impact on diamond prices in 2022. This is logical because width of a diamond is often the best indicator of its size. Additionally, Color I and J are near colorless, which are one of the most popular types of diamonds to choose and Cut Ideal is also a common choice.
